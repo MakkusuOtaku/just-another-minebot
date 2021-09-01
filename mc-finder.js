@@ -3,7 +3,7 @@ const minecraftData = require('minecraft-data')("1.16.4");
 const blockLoot = minecraftData.blockLoot;
 const entityLoot = minecraftData.entityLoot;
 
-exports.searchBlocks = (item)=>{
+exports.blocks = (item)=>{
 	let results = [];
 
 	for (blockName of Object.keys(blockLoot)) {
@@ -17,7 +17,7 @@ exports.searchBlocks = (item)=>{
 	return(results);
 }
 
-exports.searchMobs = (item)=>{
+exports.mobs = (item)=>{
 	let results = [];
 
 	for (entityName of Object.keys(entityLoot)) {
