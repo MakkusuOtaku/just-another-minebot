@@ -8,4 +8,4 @@ Made with Mineflayer.
 - huntfor
 - minefor
 - source
-- quary
+- quarry
