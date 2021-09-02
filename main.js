@@ -1,9 +1,9 @@
 const mineflayer = require("mineflayer");
-const buildings = require("./generate-buildings.js");
-const actions = require("./bot-actions.js");
+const actions = require("./actions.js");
+const fs = require('fs');
 
-const spawnDelay = 2000;
-const maxBots = 1;
+const settings = JSON.parse(fs.readFileSync("settings.json", 'utf8'));
+
 const bots = [];
 const structures = [];
 const commands = [];
@@ -18,7 +18,7 @@ function createBot() {
         username: `Machine_${bots.length}`,
         server: "localhost",
         version: "1.16.4",
-        port: 54872,
+        port: 62402,
     });
     
     bot.task = [];
@@ -89,7 +89,7 @@ function runCommand(bot, tokens) {
 async function cosmicLooper() {
     let time = new Date();
 
-    if (!spawning && bots.length < maxBots && (time-lastJoin) > spawnDelay) {
+    if (!spawning && bots.length < settings.maxBots && (time-lastJoin) > settings.spawnDelay) {
         createBot();
     }
 
