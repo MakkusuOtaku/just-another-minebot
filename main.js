@@ -22,6 +22,7 @@ function createBot() {
     });
     
     bot.task = [];
+	bot.todo = [];
 
     bot.once("spawn", ()=>{
         spawning = false;
@@ -39,17 +40,50 @@ function processCommand(username, message) {
 
     let tokens = message.split(' ');
 
-    let bot = bots.find((bot)=>{
-        return !bot.task.length;
-    });
+	if (tokens[0].startsWith('@')) {
+		let bot = bots.find((bot)=>{
+			return bot.username == tokens[0].slice(1);
+		});
 
-    if (bot) {
-        //actions.pathfind(bot, bot.players["Makkusu_Otaku"].entity.position);
-        actions.placeBlock(bot, bot.players["Makkusu_Otaku"].entity.position.clone(), "cobblestone");
-    } else {
-        bots[0].chat("Everyone is busy.");
-        commands.push(tokens);
-    }
+		tokens = tokens.slice(1);
+
+		if (bot) {
+			if (bot.task.length) {
+				bot.chat(`I'm busy. I'll do it later.`);
+				bot.todo.push(tokens);
+			} else {
+				runCommand(bot, tokens);
+			}
+		} else {
+			bots[0].chat("Couldn't find the specified bot.");
+		}
+	} else {
+		let bot = bots.find((bot)=>{
+			return !bot.task.length;
+		});
+
+		if (bot) {
+			runCommand(bot, tokens);
+		} else {
+			bots[0].chat("Everyone is busy. Adding the command to list.");
+			commands.push(tokens);
+		}
+	}
+}
+
+function runCommand(bot, tokens) {
+	switch (tokens[0]) {
+		case 'break':
+			actions.clearBlock(bot, vec3(
+				parseInt(tokens[1]),
+				parseInt(tokens[2]),
+				parseInt(tokens[3]),
+			));
+			break;
+		case 'find':
+			actions.getItem(bot, tokens[1]);
+			break;
+	}
 }
 
 async function cosmicLooper() {
@@ -58,6 +92,18 @@ async function cosmicLooper() {
     if (!spawning && bots.length < maxBots && (time-lastJoin) > spawnDelay) {
         createBot();
     }
+
+	for (bot of bots) {
+		if (!bot.task.length) {
+			if (bot.todo.length) {
+				runCommand(bot, bot.todo[0]);
+				bot.todo = bot.todo.slice(1);
+			} else if (commands.length) {
+				runCommand(bot, commands[0]);
+				commands = commands.slice(1);
+			}
+		}
+	}
 
     if (bots.length && 0) {
         console.clear();
