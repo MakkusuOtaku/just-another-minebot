@@ -1,3 +1,8 @@
+/*
+    This is a work in progress and isn't very reliable.
+    I'm putting it in here for testing.
+*/
+
 const vec3 = require('vec3');
 
 function neighbours(bot, p) {
