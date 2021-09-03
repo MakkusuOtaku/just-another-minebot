@@ -2,7 +2,7 @@ const mineflayer = require("mineflayer");
 const actions = require("./actions.js");
 const fs = require('fs');
 
-const settings = JSON.parse(fs.readFileSync("settings.json", 'utf8'));
+const settings = JSON.parse(fs.readFileSync('./settings.json', 'utf8'));
 
 const bots = [];
 const structures = [];
@@ -45,7 +45,7 @@ function processCommand(username, message) {
 			return bot.username == tokens[0].slice(1);
 		});
 
-		tokens = tokens.slice(1);
+		tokens.shift();
 
 		if (bot) {
 			if (bot.task.length) {
@@ -83,6 +83,9 @@ function runCommand(bot, tokens) {
 		case 'find':
 			actions.getItem(bot, tokens[1]);
 			break;
+		case 'come':
+			actions.pathfind(bot, bot.players["Makkusu_Otaku"].entity.position, 2.5, 50);
+			break;
 	}
 }
 
@@ -97,10 +100,10 @@ async function cosmicLooper() {
 		if (!bot.task.length) {
 			if (bot.todo.length) {
 				runCommand(bot, bot.todo[0]);
-				bot.todo = bot.todo.slice(1);
+				bot.todo.shift();
 			} else if (commands.length) {
 				runCommand(bot, commands[0]);
-				commands = commands.slice(1);
+				commands.shift();
 			}
 		}
 	}
@@ -115,7 +118,6 @@ async function cosmicLooper() {
 }
 
 createBot();
-structures.push(buildings.stage());
 
 bots[0].once("spawn", ()=>{
     let bot = bots[0];

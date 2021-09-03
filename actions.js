@@ -8,14 +8,16 @@ function sleep(time) {
     return new Promise(resolve=>setTimeout(resolve, time));
 }
 
-const pathfind = async (bot, position, range=1)=>{
+const pathfind = async (bot, position, range=1, maxLoops=300)=>{
     bot.task.push("pathfind");
 
+    // I know, sorry.
+
     let botPosition = bot.entity.position;
-    let path = pathfinder.path(bot, bot.entity.position, position, range);
+    let path = pathfinder.path(bot, bot.entity.position, position, range, maxLoops);
 
     while (botPosition.distanceTo(position) > range) {
-        path = pathfinder.path(bot, botPosition, position, range);
+        path = pathfinder.path(bot, botPosition, position, range, maxLoops);
 
         if (path.length) {
             pathfinder.walk(bot, path[path.length-1].position);
