@@ -52,11 +52,17 @@ function gridWalk(bot, goal) {
     }
 }
 
-function pathfind(bot, start, end, range=1, maxLoops=300) {
+function pathfind(bot, start, end, range=1, maxLoops=100) {
     let openList = [];
     let closedList = [];
     let initDist = start.distanceTo(end);
     let loops = 0;
+
+    start = vec3(
+        Math.floor(start.x)+0.5,
+        Math.floor(start.y),
+        Math.floor(start.z)+0.5
+    );
 
     openList.push({
         position: start,

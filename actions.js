@@ -11,8 +11,6 @@ function sleep(time) {
 const pathfind = async (bot, position, range=1, maxLoops=300)=>{
     bot.task.push("pathfind");
 
-    // I know, sorry.
-
     let botPosition = bot.entity.position;
     let path = pathfinder.path(bot, bot.entity.position, position, range, maxLoops);
 

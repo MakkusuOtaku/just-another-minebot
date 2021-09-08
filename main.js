@@ -36,7 +36,7 @@ function createBot() {
 }
 
 function processCommand(username, message) {
-    if (username !== "Makkusu_Otaku") return;
+    if (!settings.bosses.includes(username)) return;
 
     let tokens = message.split(' ');
 

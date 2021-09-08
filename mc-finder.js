@@ -1,4 +1,5 @@
 const minecraftData = require('minecraft-data')("1.16.4"); //Keeping this as is for now.
+const Recipe = require("prismarine-recipe")("1.16.4").Recipe;
 
 const blockLoot = minecraftData.blockLoot;
 const entityLoot = minecraftData.entityLoot;
@@ -15,7 +16,7 @@ exports.blocks = (item)=>{
 		}
 	}
 	return(results);
-}
+};
 
 exports.mobs = (item)=>{
 	let results = [];
@@ -29,4 +30,8 @@ exports.mobs = (item)=>{
 		}
 	}
 	return(results);
-}
+};
+
+exports.recipes = (item)=>{
+	//let repices = bot.recipesAll(itemType, metadata, craftingTable)
+};
