@@ -22,7 +22,10 @@ function neighbours(bot, p) {
     }
 
     return points.filter((n)=>{
-        return !clean(bot, n, 0,-1, 0) && clean(bot, n, 0, 0, 0) && clean(bot, n, 0, 1, 0);
+        let block = bot.blockAt(n.offset(0, -1, 0));
+        let height = block && block.shapes.length? block.shapes[0][4] : 1;
+        
+        return height <= 1 && !clean(bot, n, 0,-1, 0) && clean(bot, n, 0, 0, 0) && clean(bot, n, 0, 1, 0);
     });
 }
 

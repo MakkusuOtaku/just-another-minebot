@@ -32,6 +32,12 @@ exports.mobs = (item)=>{
 	return(results);
 };
 
-exports.recipes = (item)=>{
-	//let repices = bot.recipesAll(itemType, metadata, craftingTable)
+exports.recipes = (bot, item)=>{
+	let itemID = minecraftData.itemsByName[item].id;
+	let craftingTable = bot.findBlock({
+        matching: minecraftData.blocksByName.crafting_table.id,
+    });;
+
+	let repices = bot.recipesAll(itemID, null, craftingTable);
+	return repices;
 };

@@ -3,6 +3,9 @@ const Item = require('prismarine-item')('1.16.4');
 const pathfinder = require("./pathfinder.js");
 const vec3 = require('vec3');
 const mcfinder = require('./mc-finder.js');
+const fs = require('fs');
+
+const tools = fs.readFileSync('tool-list.txt', 'utf8').split('\r\n');;
 
 function sleep(time) {
     return new Promise(resolve=>setTimeout(resolve, time));
@@ -38,12 +41,27 @@ const clearBlock = async (bot, position)=>{
     let block = bot.blockAt(position);
 
     if (bot.game.gameMode == "survival") {
-        //Get some tools
+        let availableTools = bot.inventory.slots.filter((slot)=>{
+            if (!slot) return;
+            return block.canHarvest(slot.type);
+        });
+
+        if (availableTools.length) {
+            await bot.equip(availableTools[0].type, 'hand');
+        } else if (!block.canHarvest(null)) {
+            let tool = tools.find((toolName)=>{
+                return block.canHarvest(mcdata.itemsByName[toolName].id);
+            });
+
+            if (tool) {
+                console.log(`Looks like I need ${tool}.`);
+                await getItem(bot, tool);
+                await bot.equip(mcdata.itemsByName[tool].id, 'hand');
+            } else console.log(`Don't know how to destroy ${block.displayName}.`);
+        }
     }
 
     await bot.dig(block, true);
-
-    //TODO:     Remove entities from space too.
 
     bot.task.pop();
 };
@@ -86,7 +104,7 @@ const placeBlock = async (bot, position, type="dirt")=>{
 };
 
 const getItem = async (bot, item)=>{
-    bot.task.push("get item");
+    bot.task.push("get");
 
     let sourceBlocks = mcfinder.blocks(item).map(block=>{
         return mcdata.blocksByName[block].id;
@@ -96,11 +114,49 @@ const getItem = async (bot, item)=>{
         matching: sourceBlocks
     });
 
-    bot.chat(`Blocks: ${blocks.length}`);
-    bot.chat(`Entities: ${0}`);
-
     if (blocks.length) {
         await clearBlock(bot, blocks[0]);
+
+        for (let loops = 0; loops < 10; loops++) {
+            let drop = bot.nearestEntity((entity)=>{
+                return entity.name == 'item';
+            });
+
+            if (drop) {
+                await pathfind(bot, drop.position.clone(), 1.5);
+            } else {
+                console.log("Can't find item.");
+                await sleep(200);
+            }
+        }
+    } else {
+        let recipes = mcfinder.recipes(bot, item);
+
+        let recipe = recipes[0]; //This needs work.
+
+        if (recipe.inShape) {
+            for (row of recipe.inShape) {
+                for (item of row) {
+                    if (item.id != -1) {
+                        await getItem(bot, mcdata.items[item.id].name);
+                    }
+                }
+            }
+        } else if (recipe.ingredients) {
+            for (item of recipe.ingredients) {
+                await getItem(bot, mcdata.items[item.id].name);
+            }
+        } else {
+            console.log(`I don't know how to make ${item}.`);
+        }
+
+        let craftingTable = bot.findBlock({
+            matching: mcdata.blocksByName.crafting_table.id,
+        });;
+
+        await pathfind(bot, craftingTable.position, 2);
+
+        await bot.craft(recipe, 1, craftingTable);
     }
 
     bot.task.pop();

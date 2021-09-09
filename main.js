@@ -18,7 +18,7 @@ function createBot() {
         username: `Machine_${bots.length}`,
         server: "localhost",
         version: "1.16.4",
-        port: 62402,
+        port: 62544,
     });
     
     bot.task = [];
@@ -80,11 +80,11 @@ function runCommand(bot, tokens) {
 				parseInt(tokens[3]),
 			));
 			break;
-		case 'find':
-			actions.getItem(bot, tokens[1]);
-			break;
 		case 'come':
 			actions.pathfind(bot, bot.players["Makkusu_Otaku"].entity.position, 2.5, 50);
+			break;
+		case 'find':
+			actions.getItem(bot, tokens[1]);
 			break;
 	}
 }
