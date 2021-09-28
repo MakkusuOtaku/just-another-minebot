@@ -1,8 +1,8 @@
-const minecraftData = require('minecraft-data')("1.16.4"); //Keeping this as is for now.
+const mcdata = require('minecraft-data')("1.16.4"); //Keeping this as is for now.
 const Recipe = require("prismarine-recipe")("1.16.4").Recipe;
 
-const blockLoot = minecraftData.blockLoot;
-const entityLoot = minecraftData.entityLoot;
+const blockLoot = mcdata.blockLoot;
+const entityLoot = mcdata.entityLoot;
 
 exports.blocks = (item)=>{
 	let results = [];
@@ -32,12 +32,16 @@ exports.mobs = (item)=>{
 	return(results);
 };
 
-exports.recipes = (bot, item)=>{
-	let itemID = minecraftData.itemsByName[item].id;
-	let craftingTable = bot.findBlock({
-        matching: minecraftData.blocksByName.crafting_table.id,
-    });;
-
-	let repices = bot.recipesAll(itemID, null, craftingTable);
-	return repices;
+exports.recipes = (bot, itemName)=>{
+	let item = mcdata.itemsByName[itemName];
+	if (item) {
+		let craftingTable = bot.findBlock({
+			matching: mcdata.blocksByName.crafting_table.id,
+		});;
+	
+		let repices = bot.recipesAll(item.id, null, craftingTable);
+		return repices;
+	} else {
+		return [];
+	}
 };

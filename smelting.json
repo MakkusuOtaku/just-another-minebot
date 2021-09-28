@@ -1,0 +1,18 @@
+{
+    "glass": {
+        "sources": ["sand", "red_sand"],
+        "time": 0
+    },
+    "gold_ingot": {
+        "sources": ["gold_ore"],
+        "time": 0
+    },
+    "iron_ingot": {
+        "sources": ["iron_ore"],
+        "time": 0
+    },
+    "stone": {
+        "sources": ["cobblestone"],
+        "time": 0
+    }
+}
