@@ -127,6 +127,26 @@ const placeBlock = async (bot, position, type="dirt")=>{
     bot.task.pop();
 };
 
+const prepareTable = async (bot, tableType)=>{
+    bot.task.push(`prepare ${tableType}`);
+
+    let table = bot.findBlock({
+        matching: mcdata.blocksByName[tableType].id,
+    });
+
+    let tablePosition;
+
+    if (!table) {
+        tablePosition = bot.entity.position.clone().offset(1, 0, 0); //Fix this. Make it better.
+        await placeBlock(bot, tablePosition, tableType);
+    } else {
+        tablePosition = table.position;
+    }
+    
+    bot.task.pop();
+    return tablePosition;
+};
+
 const getItem = async (bot, item)=>{
     bot.task.push(`get ${item}`);
 
@@ -155,22 +175,55 @@ const getItem = async (bot, item)=>{
     } else {
         let recipes = mcfinder.recipes(bot, item);
 
-        if (recipes.length) {
-            await craftItem(bot, item);
-        } else if (smelting[item]) {
+        if (smelting[item]) {
             await smeltItem(bot, smelting[item].sources[0]);
+        } else if (recipes.length) {
+            await craftItem(bot, item);
         } else {
-            console.log(`Couldn't find any recipes for ${item}.`);
+            //console.log(`Couldn't find any recipes for ${item}.`);
+            await craftItem(bot, item);
         }
     }
 
     bot.task.pop();
 }
 
+const hasIngredients = (bot, ingredients)=>{
+    //bot.inventory.count(mcdata.itemsByName[name].id);
+    console.log("Checking for ingredients:");
+
+    for (ingredient of ingredients) {
+        //let name = mcdata.items[ingredient.id].name;
+        //await collectItem(bot, name, -ingredient.count);
+        let got = bot.inventory.count(ingredient.id);
+        let get = -ingredient.count;
+
+        console.log(`   ${mcdata.items[ingredient.id].name}: ${got}/${get} ${got >= get? '✔︎':'✘'}`);
+
+        if (got < get) return false;
+    }
+
+    return true;
+};
+
 const craftItem = async (bot, item)=>{
     bot.task.push(`craft ${item}`);
 
-    let recipes = mcfinder.recipes(bot, item);
+    let recipes = mcfinder.recipes(bot, item, false);
+    console.log(`Recipes for ${item}: ${recipes.length}`);
+
+    let usingTable = false;
+    let craftingTable;
+
+    if (!recipes.length) {
+        usingTable = true;
+        console.log("Crafting table required.");
+
+        let tablePosition = await prepareTable(bot, 'crafting_table');
+        craftingTable = bot.blockAt(tablePosition);
+
+        recipes = mcfinder.recipes(bot, item, true);
+    }
 
     let recipe = recipes[0]; //This needs work.
 
@@ -178,39 +231,23 @@ const craftItem = async (bot, item)=>{
         return ingredient.count < 0;
     });
 
-    for (ingredient of needs) {
-        let name = mcdata.items[ingredient.id].name;
-        await collectItem(bot, name, -ingredient.count);
+
+    while (!hasIngredients(bot, needs)) {
+        for (ingredient of needs) {
+            let name = mcdata.items[ingredient.id].name;
+            await collectItem(bot, name, -ingredient.count);
+        }
     }
 
-    /*if (recipe.inShape) {
-        for (row of recipe.inShape) {
-            for (item of row) {
-                if (item.id != -1) {
-                    await getItem(bot, mcdata.items[item.id].name);
-                }
-            }
-        }
-    } else if (recipe.ingredients) {
-        for (item of recipe.ingredients) {
-            await getItem(bot, mcdata.items[item.id].name);
-        }
-    } else {
-        console.log(`I don't know how to make ${item}.`);
-    }*/
-
-    let craftingTable = bot.findBlock({
-        matching: mcdata.blocksByName.crafting_table.id,
-    });
-
-    await pathfind(bot, craftingTable.position, 2);
-
-    await bot.craft(recipe, 1, craftingTable);
+    if (usingTable) {
+        await pathfind(bot, craftingTable.position, 2);
+        await bot.craft(recipe, 1, craftingTable);
+    } else await bot.craft(recipe, 1);
 
     bot.task.pop();
 };
 
-const fuels = ['oak_log']; //Add stuff to this if you want.
+const fuels = ['coal', 'oak_log'];
 
 const smeltItem = async (bot, itemName)=>{
     bot.task.push(`smelt ${itemName}`);
@@ -231,9 +268,12 @@ const smeltItem = async (bot, itemName)=>{
         console.log("Got some fuel.");
     }
 
-    let furnaceBlock = bot.findBlock({
+    let furnacePosition = await prepareTable(bot, 'furnace');
+    let furnaceBlock = bot.blockAt(furnacePosition);
+
+    /*let furnaceBlock = bot.findBlock({
         matching: mcdata.blocksByName.furnace.id,
-    });
+    });*/
 
     if (furnaceBlock) {
         await pathfind(bot, furnaceBlock.position, 2);
@@ -241,9 +281,24 @@ const smeltItem = async (bot, itemName)=>{
         let furnace = await bot.openFurnace(furnaceBlock);
 
         await furnace.putInput(item.id, null, 1);
-        await furnace.putFuel(mcdata.blocksByName[fuel].id, null, 1);
+        await furnace.putFuel(mcdata.itemsByName[fuel].id, null, 1);
 
         furnace.close();
+
+        while (true) { //This could easily be a problem. ¯\_(ツ)_/¯
+            await sleep(2000);
+            console.log("Waiting for furnace.");
+
+            let furnace = await bot.openFurnace(furnaceBlock);
+            let out = furnace.outputItem();
+
+            if (furnace.outputItem()) {
+                await furnace.takeOutput();
+                furnace.close();
+                break;
+            }
+            furnace.close();
+        }
     }
 
     bot.task.pop();
@@ -254,7 +309,7 @@ const collectItem = async (bot, itemName, quantity)=>{
     bot.task.push(`collect ${itemName} x${quantity}`);
 
     let item = mcdata.itemsByName[itemName];
-    let deposited = 0; //Keep track of items deposited into chests.
+    let deposited = 0; //Keep track of items deposited into chests. (None for now because I haven't added that)
     if (!quantity) quantity = item.stackSize;
 
     while (bot.inventory.count(item.id)+deposited < quantity) {

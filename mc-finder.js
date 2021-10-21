@@ -32,15 +32,20 @@ exports.mobs = (item)=>{
 	return(results);
 };
 
-exports.recipes = (bot, itemName)=>{
+exports.recipes = (bot, itemName, useTable=true)=>{
 	let item = mcdata.itemsByName[itemName];
 	if (item) {
-		let craftingTable = bot.findBlock({
-			matching: mcdata.blocksByName.crafting_table.id,
-		});;
-	
-		let repices = bot.recipesAll(item.id, null, craftingTable);
-		return repices;
+		if (useTable) {
+			let craftingTable = bot.findBlock({
+				matching: mcdata.blocksByName.crafting_table.id,
+			});;
+		
+			let repices = bot.recipesAll(item.id, null, craftingTable);
+			return repices;
+		} else {
+			let repices = bot.recipesAll(item.id, null);
+			return repices;
+		}
 	} else {
 		return [];
 	}
