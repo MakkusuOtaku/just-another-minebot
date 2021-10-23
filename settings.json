@@ -1,5 +1,5 @@
 {
     "bosses": ["Makkusu_Otaku"],
-    "maxBots": 1,
+    "maxBots": 2,
     "spawnDelay": 1000
 }

@@ -13,6 +13,7 @@ function sleep(time) {
 }
 
 const pathfind = async (bot, position, range=1, maxLoops=300)=>{
+    let tracker = bot.task.length;
     bot.task.push(`pathfind ${range}`);
 
     if (bot.entity.position.distanceTo(position) <= range) {
@@ -23,6 +24,12 @@ const pathfind = async (bot, position, range=1, maxLoops=300)=>{
     let botPosition = bot.entity.position;
     let path = pathfinder.path(bot, bot.entity.position, position, range, maxLoops);
 
+    if (!path.length) {
+        await sleep(2000);
+        botPosition = bot.entity.position;
+        path = pathfinder.path(bot, bot.entity.position, position, range, maxLoops);
+    }
+
     bot.path = {
         path: path,
         goal: position,
@@ -30,9 +37,13 @@ const pathfind = async (bot, position, range=1, maxLoops=300)=>{
         maxLoops: maxLoops,
     };
 
+    let originalLength = path.length;
+
     while (botPosition.distanceTo(position) > range) {
         path = bot.path.path;
         //path = pathfinder.path(bot, botPosition, position, range, maxLoops);
+
+        bot.task[tracker] = `pathfind ${path.length}/${originalLength} <${range}`;
 
         if (path.length) {
             let distanceA = botPosition.distanceTo(path[path.length-1].position);
@@ -93,7 +104,7 @@ const clearBlock = async (bot, position)=>{
 function checkInventory(bot, itemName) {
     let items = bot.inventory.items();
     return items.filter(item => item.name === itemName).length;
-}
+};
 
 const equip = async (bot, item, slot='hand')=>{
     bot.task.push(`equip ${item}`);
@@ -121,6 +132,8 @@ const placeBlock = async (bot, position, type="dirt")=>{
 
     await equip(bot, type);
 
+    await pathfind(bot, position, 4);
+
     let referenceBlock = bot.blockAt(position.offset(0, -1, 0), false);
     await bot.placeBlock(referenceBlock, vec3(0, 1, 0)).catch(console.log);
 
@@ -137,7 +150,28 @@ const prepareTable = async (bot, tableType)=>{
     let tablePosition;
 
     if (!table) {
-        tablePosition = bot.entity.position.clone().offset(1, 0, 0); //Fix this. Make it better.
+        let blocks = bot.findBlocks({
+            maxDistance: 8,
+            matching: [mcdata.blocksByName.air.id, mcdata.blocksByName.cave_air.id],
+            count: 64,
+        });
+
+        console.log(`Found ${blocks.length} air.`);
+
+        let block = blocks.find((b)=>{
+            let below = bot.blockAt(b.offset(0, -1, 0));
+
+            for (entity of Object.values(bot.entities)) {
+                // This should be improved. I'll do it later.... maybe.
+                if (entity.position.distanceTo(b) <= 1) return false;
+            }
+
+            return !['air', 'cave_air'].includes(below.name);
+        });
+
+        if (block) tablePosition = block;
+        else console.log("Couldn't find a place to put the table.");
+
         await placeBlock(bot, tablePosition, tableType);
     } else {
         tablePosition = table.position;
@@ -168,7 +202,8 @@ const getItem = async (bot, item)=>{
             });
 
             if (drop) {
-                await pathfind(bot, drop.position.clone(), 1.5);
+                //await pathfind(bot, drop.position.clone().floor().offset(0.5, 0, 0.5), 1);
+                await pathfind(bot, drop.position.clone().floor(), 1);
             }
             await sleep(100);
         }
@@ -186,7 +221,7 @@ const getItem = async (bot, item)=>{
     }
 
     bot.task.pop();
-}
+};
 
 const hasIngredients = (bot, ingredients)=>{
     //bot.inventory.count(mcdata.itemsByName[name].id);

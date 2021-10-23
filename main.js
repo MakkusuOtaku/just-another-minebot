@@ -20,7 +20,7 @@ function createBot() {
         username: `TestMachine_${bots.length}`,
         server: "localhost",
         version: "1.16.4",
-		port: 53500,
+		port: 63331,
     });
     
     bot.task = [];
@@ -189,7 +189,7 @@ async function cosmicLooper() {
 		}
 	}
 
-    if (bots.length && 0) {
+    if (bots.length) {
         console.clear();
         for (bot of bots) {
             console.log(`${bot.username}:  ${bot.task.join(' > ')}`);
