@@ -424,6 +424,21 @@ const deposit = async (bot, position, items=[])=>{
     bot.task.pop();
 };
 
+const give = async (bot, username, itemName, quantity)=>{
+    bot.task.push(`give ${username} ${itemName} x${quantity}`);
+
+    let player = bot.players[username];
+    let itemID = mcdata.itemsByName[itemName].id;
+
+    await collectItem(bot, itemName, quantity);
+
+    await pathfind(bot, player.entity.position, 2.5, 300);
+
+    await bot.toss(itemID, null, quantity);
+
+    bot.task.pop();
+};
+
 //This could use a clean.
 exports.pathfind = pathfind;
 exports.clearBlock = clearBlock;
@@ -434,5 +449,6 @@ exports.collectItem = collectItem;
 exports.equip = equip;
 exports.deposit = deposit;
 exports.smelt = smeltItem;
+exports.give = give;
 
 exports.pathfinder = pathfinder;

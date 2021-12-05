@@ -20,7 +20,7 @@ function createBot() {
         username: `TestMachine_${bots.length}`,
         server: "localhost",
         version: "1.16.4",
-		port: 63331,
+		port: 50017,
     });
     
     bot.task = [];
@@ -87,6 +87,11 @@ function processCommand(username, message) {
 	}
 }
 
+/*
+	The comments in the following function are only reminders to myself of all the things I haven't added.
+	Please keep that in mind.
+*/
+
 function runCommand(bot, tokens) {
 	switch (tokens[0]) {
 		case 'break':
@@ -97,13 +102,13 @@ function runCommand(bot, tokens) {
 			));
 			break;
 		case 'collect':
-			//Get a type of item by both mining and hunting on loop.
-			//Can also include stopping criteria.
+			// Get a type of item by both mining and hunting on loop.
+			// Can also include stopping criteria.
 
 			actions.collectItem(bot, tokens[1], parseInt(tokens[2]));
 			break;
 		case 'come':
-			actions.pathfind(bot, bot.players["Makkusu_Otaku"].entity.position, 2.5, 50);
+			actions.pathfind(bot, bot.players["Makkusu_Otaku"].entity.position, 2.5, 300);
 			break;
 		case 'deposit':
 			//Deposit items into chest at position.
@@ -125,6 +130,14 @@ function runCommand(bot, tokens) {
 			//Get the specified item.
 			actions.getItem(bot, tokens[1]);
 			break;
+		case 'give':
+			actions.give(
+				bot,
+				tokens[1],
+				tokens[2],
+				parseInt(tokens[3] || '1')
+			);
+			break;
 		case 'goto':
 			//Go to specified position.
 			actions.pathfind(bot, vec3(
@@ -135,10 +148,6 @@ function runCommand(bot, tokens) {
 			break;
 		case 'hunt':
 			//Hunt for a single item.
-			break;
-		case 'huntfor':
-			//Go hunting for a type of item on loop.
-			//Can also include stopping criteria.
 			break;
 		case 'mine':
 			//Mine for a single item.
