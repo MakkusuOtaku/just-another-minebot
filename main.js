@@ -80,8 +80,16 @@ function chat(username, message) {
 			goal.blocks = [];
 			break;
 		case 'list':
-			console.log(bot.inventory);
-			bot.whisper(username, bot.inventory.slots.join(', ')); //This doesn't work & I'm too lazy to fix it.
+			for (let i = 0; i < bot.inventory.slots.length; i++) {
+					var items = bot.inventory.slots[i];
+					if (items !== null) {
+						if (items.count > 0 && items.stackSize > 1) {
+							bot.whisper(items.count + ' ' + items.displayName + ' in slot #' + items.slot);
+						} else {
+						bot.whisper(items.displayName + ' in slot #' + items.slot);
+						}
+					}
+				};
 			break;
 		case 'minefor':
 			for (option of tokens[1].split(',')) {
