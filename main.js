@@ -3,22 +3,22 @@ const vec3 = require('vec3');
 const {pathfinder, Movements, goals} = require('mineflayer-pathfinder');
 
 var goal = {
-	blocks: [],
+	blocks: [iron],
 	mobs: [],
 	literally: [],
 };
 
 var target;
 var task = 'idle';
-var dropoff;
+var dropoff= '1568,167,-167';
 var mcData;
 
 const brain = require('./brain.js');
 
 const bot = mineflayer.createBot({
-	host: "localhost",
-	username: "JABot",
-	version: "1.16.4",
+	host: "KingMazer.aternos.me",
+	username: "Linn",
+	version: "1.19",
 	viewDistance: "tiny",
 });
 
